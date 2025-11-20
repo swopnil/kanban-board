@@ -13,8 +13,19 @@ class App {
             console.log('Initializing KanbanFlow application...');
             
             // Initialize managers
-            await authManager.init();
-            ticketManager.init();
+            await auth.init();
+            
+            // Initialize other managers if they exist
+            if (typeof ticketManager !== 'undefined') {
+                ticketManager.init();
+            }
+            if (typeof dashboardManager !== 'undefined') {
+                dashboardManager.init();
+            }
+            if (typeof boardManager !== 'undefined') {
+                // Board manager doesn't need explicit init
+                console.log('Board manager loaded');
+            }
             
             // Setup global event listeners
             this.setupGlobalEventListeners();
@@ -279,12 +290,28 @@ function openCreateModal() {
 }
 
 function showProfile() {
-    const user = authManager.getCurrentUser();
-    if (user) {
-        alert(`Profile: ${user.name} (${user.email})\nRole: ${user.role}`);
+    if (currentUser) {
+        alert(`Profile: ${currentUser.name} (${currentUser.email})\nRole: ${currentUser.role}`);
         // TODO: Implement profile modal
     }
 }
+
+function toggleUserMenu() {
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown) {
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    }
+}
+
+// Close user dropdown when clicking outside
+document.addEventListener('click', (event) => {
+    const userMenu = document.querySelector('.user-menu');
+    const dropdown = document.getElementById('userDropdown');
+    
+    if (dropdown && !userMenu.contains(event.target)) {
+        dropdown.style.display = 'none';
+    }
+});
 
 // Create and initialize the main app instance
 const app = new App();
@@ -296,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Handle page visibility changes
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && authManager.isAuthenticated()) {
+    if (!document.hidden && currentUser) {
         // Refresh data when page becomes visible again
         if (app.currentView === 'dashboard' && dashboardManager) {
             dashboardManager.refresh();

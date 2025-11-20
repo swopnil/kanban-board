@@ -11,7 +11,7 @@ class DashboardManager {
 
     // Initialize dashboard
     async init() {
-        if (!authManager.isAuthenticated()) {
+        if (!currentUser) {
             return;
         }
 
@@ -47,12 +47,12 @@ class DashboardManager {
         let inProgress = 0;
         let completed = 0;
         
-        const currentUserId = authManager.getCurrentUser().id;
+        const currentUserId = currentUser.id || currentUser._id;
 
         try {
             // Get tickets from all boards
             for (const board of this.boards) {
-                const ticketsResponse = await api.getTicketsByBoard(board._id);
+                const ticketsResponse = await api.getTickets(board._id);
                 const tickets = ticketsResponse.tickets || [];
 
                 for (const ticket of tickets) {
@@ -122,7 +122,7 @@ class DashboardManager {
                 </div>
                 <div class="board-card-footer">
                     <span>Created ${formatDate(board.createdAt)}</span>
-                    <span>${board.members.length} member${board.members.length !== 1 ? 's' : ''}</span>
+                    <span>${(board.members || []).length} member${(board.members || []).length !== 1 ? 's' : ''}</span>
                 </div>
             </div>
         `).join('');
@@ -287,7 +287,46 @@ function openBoard(boardId) {
 
 function openCreateBoardModal() {
     const modal = document.getElementById('createBoardModal');
+    modal.style.display = 'block';
     modal.classList.add('show');
+}
+
+// Utility functions
+function setLoading(button, loading) {
+    if (loading) {
+        button.disabled = true;
+        button.dataset.originalText = button.textContent;
+        button.textContent = 'Loading...';
+    } else {
+        button.disabled = false;
+        button.textContent = button.dataset.originalText || button.textContent;
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        
+        const form = modal.querySelector('form');
+        if (form) {
+            form.reset();
+        }
+    }
 }
 
 function showAllBoards() {
