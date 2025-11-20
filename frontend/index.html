@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KanbanFlow - Project Management</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Authentication Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content auth-modal">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h2 id="authTitle">Sign In to KanbanFlow</h2>
+                    <span class="close-modal" onclick="closeAuthModal()">&times;</span>
+                </div>
+                <form id="authForm">
+                    <div class="form-group" id="nameGroup" style="display: none;">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" placeholder="Enter your full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                    <div class="form-group" id="roleGroup" style="display: none;">
+                        <label for="role">Role</label>
+                        <select id="role" name="role">
+                            <option value="Person">Person</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="auth-btn" id="authSubmitBtn">Sign In</button>
+                </form>
+                <div class="auth-switch">
+                    <p id="authSwitchText">Don't have an account? <a href="#" onclick="toggleAuthMode()">Sign up</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" style="display: none;">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <i class="fas fa-layer-group"></i>
+                    <span>KanbanFlow</span>
+                </div>
+            </div>
+            <div class="header-center">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search tickets, boards..." class="search-input">
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="create-btn" onclick="openCreateModal()">
+                    <i class="fas fa-plus"></i>
+                    Create
+                </button>
+                <div class="user-menu">
+                    <button class="user-avatar" onclick="toggleUserMenu()">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="userName">User</span>
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="#" onclick="showProfile()">Profile</a>
+                        <a href="#" onclick="logout()">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <h3>Your work</h3>
+                    <a href="#" onclick="showDashboard()" class="nav-item active">
+                        <i class="fas fa-home"></i>
+                        Dashboard
+                    </a>
+                    <a href="#" onclick="showAllBoards()" class="nav-item">
+                        <i class="fas fa-layer-group"></i>
+                        Boards
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <h3>Recent Boards</h3>
+                    <div id="recentBoards" class="recent-boards">
+                        <!-- Recent boards will be populated here -->
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <div id="dashboardView" class="view">
+                <div class="page-header">
+                    <h1>Dashboard</h1>
+                    <button class="btn btn-primary" onclick="openCreateBoardModal()">
+                        <i class="fas fa-plus"></i>
+                        Create Board
+                    </button>
+                </div>
+                <div class="dashboard-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>My Tickets</h3>
+                            <span class="stat-number" id="myTicketsCount">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <h3>In Progress</h3>
+                            <span class="stat-number" id="inProgressCount">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Completed</h3>
+                            <span class="stat-number" id="completedCount">0</span>
+                        </div>
+                    </div>
+                    <div class="boards-section">
+                        <h2>Your Boards</h2>
+                        <div id="boardsList" class="boards-grid">
+                            <!-- Boards will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Board View -->
+            <div id="boardView" class="view" style="display: none;">
+                <div class="board-header">
+                    <div class="board-info">
+                        <h1 id="boardTitle">Board Title</h1>
+                        <span id="boardDescription" class="board-description">Board description</span>
+                    </div>
+                    <div class="board-actions">
+                        <button class="btn btn-secondary" onclick="openInviteModal()">
+                            <i class="fas fa-user-plus"></i>
+                            Invite
+                        </button>
+                        <button class="btn btn-primary" onclick="openCreateTicketModal()">
+                            <i class="fas fa-plus"></i>
+                            Create Ticket
+                        </button>
+                    </div>
+                </div>
+                <div class="board-content">
+                    <div class="kanban-board" id="kanbanBoard">
+                        <div class="kanban-column" data-status="in process">
+                            <div class="column-header">
+                                <h3>In Progress</h3>
+                                <span class="ticket-count" id="inProgressTicketCount">0</span>
+                            </div>
+                            <div class="ticket-list" id="inProgressTickets">
+                                <!-- Tickets will be populated here -->
+                            </div>
+                        </div>
+                        <div class="kanban-column" data-status="ready">
+                            <div class="column-header">
+                                <h3>Ready</h3>
+                                <span class="ticket-count" id="readyTicketCount">0</span>
+                            </div>
+                            <div class="ticket-list" id="readyTickets">
+                                <!-- Tickets will be populated here -->
+                            </div>
+                        </div>
+                        <div class="kanban-column" data-status="completed">
+                            <div class="column-header">
+                                <h3>Completed</h3>
+                                <span class="ticket-count" id="completedTicketCount">0</span>
+                            </div>
+                            <div class="ticket-list" id="completedTickets">
+                                <!-- Tickets will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen" class="welcome-screen">
+        <div class="welcome-content">
+            <div class="welcome-hero">
+                <h1>Welcome to KanbanFlow</h1>
+                <p>Manage your projects with ease. Track, organize, and collaborate on tasks like a pro.</p>
+                <div class="welcome-buttons">
+                    <button class="btn btn-primary" onclick="openAuthModal('signin')">Sign In</button>
+                    <button class="btn btn-secondary" onclick="openAuthModal('signup')">Sign Up</button>
+                </div>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-tasks"></i>
+                    <h3>Task Management</h3>
+                    <p>Create, assign, and track tasks with ease</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-users"></i>
+                    <h3>Team Collaboration</h3>
+                    <p>Invite team members and work together</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Progress Tracking</h3>
+                    <p>Monitor project progress in real-time</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="createBoardModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Board</h2>
+                <span class="close-modal" onclick="closeModal('createBoardModal')">&times;</span>
+            </div>
+            <form id="createBoardForm">
+                <div class="form-group">
+                    <label for="boardName">Board Name</label>
+                    <input type="text" id="boardName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="boardDescription">Description</label>
+                    <textarea id="boardDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createBoardModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Board</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="createTicketModal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2>Create New Ticket</h2>
+                <span class="close-modal" onclick="closeModal('createTicketModal')">&times;</span>
+            </div>
+            <form id="createTicketForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ticketTitle">Title</label>
+                        <input type="text" id="ticketTitle" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ticketPriority">Priority</label>
+                        <select id="ticketPriority" name="priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="ticketDescription">Description</label>
+                    <textarea id="ticketDescription" name="description" rows="4" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ticketAssignee">Assignee</label>
+                        <select id="ticketAssignee" name="assignedTo">
+                            <option value="">Unassigned</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ticketDueDate">Due Date</label>
+                        <input type="date" id="ticketDueDate" name="dueDate">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="ticketTags">Tags (comma-separated)</label>
+                    <input type="text" id="ticketTags" name="tags" placeholder="frontend, bug, urgent">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createTicketModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="ticketDetailModal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2 id="ticketDetailTitle">Ticket Details</h2>
+                <span class="close-modal" onclick="closeModal('ticketDetailModal')">&times;</span>
+            </div>
+            <div class="ticket-detail-content">
+                <!-- Ticket details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="inviteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Invite Team Member</h2>
+                <span class="close-modal" onclick="closeModal('inviteModal')">&times;</span>
+            </div>
+            <form id="inviteForm">
+                <div class="form-group">
+                    <label for="inviteEmail">Email Address</label>
+                    <input type="email" id="inviteEmail" name="email" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('inviteModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Invitation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/tickets.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
